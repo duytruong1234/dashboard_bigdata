@@ -1,0 +1,19 @@
+{
+  "layer1": {
+    "dask_read": 1.4038105010986328,
+    "accounts_import": 20.336575508117676,
+    "transactions_import": 103.61799788475037,
+    "total": 125.93777513504028,
+    "total_rows": 1048575
+  },
+  "layer2": {
+    "scoring_time": 74.03650140762329,
+    "status_time": 9.236855030059814,
+    "total": 83.2733564376831
+  },
+  "layer3": {
+    "total": 27.506205320358276,
+    "total_locations": 1048575
+  },
+  "pipeline_total": 238.98625922203064
+}
