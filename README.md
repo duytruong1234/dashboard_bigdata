@@ -43,26 +43,44 @@ dashboard_bigdata/
 > Dự án đang kết nối mặc định vào DB tên `fraud_detection`, User: `postgres`, Password: `123`, Port: `5432` tại `localhost`. 
 > (Có thể đổi cấu hình trong file `scripts/config.py`).
 
-## 💻 Hướng dẫn Khởi chạy
+## 💻 Hướng dẫn Cài đặt & Khởi chạy
 
-**Bước 1: Chạy Data Pipeline để chuẩn bị Database**
-Mở Terminal, đứng tại thư mục gốc và chạy file Pipeline để import & chấm điểm giao dịch. Bước này có thể mất vài phút tùy vào độ lớn của file CSV.
+Dự án này đã có sẵn file sao lưu cơ sở dữ liệu (`fraud_detection.sql`). Bạn có thể bỏ qua quá trình cào dữ liệu từ file CSV (Pipeline) và đi thẳng vào việc phục hồi dữ liệu:
+
+**Bước 1: Khôi phục Dữ liệu (Restore PostgreSQL)**
+Mở Terminal/Cmd và dùng lệnh sau để import thẳng file backup SQL vào CSDL của bạn:
 ```cmd
-python scripts\run_pipeline.py
+# Tạo môi trường Database rỗng
+psql -U postgres -c "CREATE DATABASE fraud_detection;"
+
+# Bơm dữ liệu từ file .sql vào Database
+psql -U postgres -d fraud_detection -f fraud_detection.sql
+```
+*(Mẹo: Bạn có thể dễ dàng chuột phải dùng công cụ `Restore` trong phần mềm pgAdmin4 hoặc DBeaver nếu không quen dùng lệnh).*
+
+**Bước 2: Kiểm tra mật khẩu Database**
+Nếu Postgres của máy bạn không phải là tài khoản mặc định, hãy mở file `scripts/config.py` và sửa `user` / `password` khớp với máy tính của bạn:
+```python
+DB_CONFIG = {
+    'dbname': 'fraud_detection',
+    'user': 'postgres',
+    'password': '123', # Đổi pass tại đây
+}
 ```
 
-**Bước 2: Khởi động Server Web Backend**
-Chạy ứng dụng Flask để làm nền tảng nuôi giao diện.
+**Bước 3: Khởi động Web Server (Backend)**
+Cài đặt các thư viện lõi và chạy app:
 ```cmd
+pip install flask psycopg2-binary
 python web\app.py
 ```
 
-**Bước 3: Mở Dashboard sử dụng**
-Mở ngay trình duyệt web của bạn và nhấp vào đường dẫn sau:
+**Bước 4: Trải nghiệm Dashboard**
+Truy cập trình duyệt theo liên kết nội bộ:
 ```text
 http://localhost:5000
 ```
-Bạn sẽ thấy giao diện **Administr Dashboard** bắt đầu lên sóng và sẵn sàng để phân tích dữ liệu!
+Giao diện **Administr Dashboard** sẽ hiển thị cùng với toàn bộ dữ liệu lịch sử giao dịch.
 
 ---
 *Dự án: Administr Dashboard - Data & Security Analytics*
