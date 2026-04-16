@@ -199,7 +199,7 @@ def api_map_data():
                t.transaction_type, t.amount, t.is_fraud, t.anomaly_score
         FROM transaction_details td
         JOIN transactions t ON td.transaction_id = t.transaction_id
-        ORDER BY RANDOM() LIMIT 5000
+        ORDER BY RANDOM() LIMIT 25000
     """)
     data = [{
         "lat": row[0], "lng": row[1], "location": row[2],
