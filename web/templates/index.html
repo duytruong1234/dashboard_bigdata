@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,8 @@
     <title>Administr Dashboard - Fraud Detection</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -17,11 +19,13 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
-            <svg class="app-logo" width="38" height="38" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg class="app-logo" width="38" height="38" viewBox="0 0 44 44" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stop-color="#06b6d4" />
@@ -32,9 +36,10 @@
                         <feComposite in="SourceGraphic" in2="blur" operator="over" />
                     </filter>
                 </defs>
-                <path d="M22 3 L40 13.5 V30.5 L22 41 L4 30.5 V13.5 Z" stroke="url(#logo-grad)" stroke-width="2.5" fill="none" filter="url(#neon-glow)"/>
-                <path d="M22 9 L32 15 V28 L22 34 L12 28 V15 Z" fill="url(#logo-grad)" opacity="0.9"/>
-                <path d="M22 15 L26 19 C26 23 23 27 22 28 C21 27 18 23 18 19 L22 15 Z" fill="#ffffff"/>
+                <path d="M22 3 L40 13.5 V30.5 L22 41 L4 30.5 V13.5 Z" stroke="url(#logo-grad)" stroke-width="2.5"
+                    fill="none" filter="url(#neon-glow)" />
+                <path d="M22 9 L32 15 V28 L22 34 L12 28 V15 Z" fill="url(#logo-grad)" opacity="0.9" />
+                <path d="M22 15 L26 19 C26 23 23 27 22 28 C21 27 18 23 18 19 L22 15 Z" fill="#ffffff" />
             </svg>
             <h1 class="logo-text">ADMINISTR</h1>
         </div>
@@ -79,95 +84,96 @@
         <main class="page-content active" id="page-dashboard">
             <h2 class="page-heading">KPI cards</h2>
 
-            <!-- KPI Cards -->
-            <section class="kpi-row">
+            <!-- KPI Cards - Tổng số, Success và Fail -->
+            <section class="kpi-row kpi-row-3">
                 <div class="kpi-card kpi-cyan">
                     <div class="kpi-top">
                         <span class="kpi-title">TỔNG GIAO DỊCH</span>
                         <span class="material-icons-round kpi-icon-img">trending_up</span>
                     </div>
                     <div class="kpi-value" id="kpi-total">--</div>
-                    <div class="kpi-sub"><span class="material-icons-round" style="font-size:16px">credit_card</span></div>
+                    <div class="kpi-sub">Thống kê toàn thời gian</div>
                 </div>
                 <div class="kpi-card kpi-green">
                     <div class="kpi-top">
-                        <span class="kpi-title">CHẤP NHẬN</span>
+                        <span class="kpi-title">THÀNH CÔNG (SUCCESS)</span>
                         <span class="material-icons-round kpi-icon-check">check_circle</span>
                     </div>
-                    <div class="kpi-value" id="kpi-accepted">--</div>
+                    <div class="kpi-value" id="kpi-success">--</div>
+                    <div class="kpi-sub"><span id="kpi-success-pct">--</span> tổng giao dịch</div>
                 </div>
                 <div class="kpi-card kpi-red">
                     <div class="kpi-top">
-                        <span class="kpi-title">BỊ CHẶN</span>
+                        <span class="kpi-title">THẤT BẠI (FAIL)</span>
                         <span class="material-icons-round kpi-icon-block">cancel</span>
                     </div>
-                    <div class="kpi-value" id="kpi-blocked">--</div>
-                </div>
-                <div class="kpi-card kpi-yellow">
-                    <div class="kpi-top">
-                        <span class="kpi-title">CẦN XEM XÉT</span>
-                        <span class="material-icons-round kpi-icon-warn">help</span>
-                    </div>
-                    <div class="kpi-value" id="kpi-review">--</div>
+                    <div class="kpi-value" id="kpi-fail">--</div>
+                    <div class="kpi-sub"><span id="kpi-fail-pct">--</span> tổng giao dịch</div>
                 </div>
             </section>
 
 
-            <!-- Row: TPS + Status Donut + Alerts -->
-            <section class="dashboard-row">
-                <div class="card card-tps">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">speed</span> Tần Suất Giao Dịch Theo Step (TPS)</h3>
+            <!-- Row: TPS + Status Donut (chỉ 2 loại, xanh/đỏ) -->
+            <section class="dashboard-row grid-2">
+                <div class="card">
+                    <h3 class="card-title"><span class="material-icons-round card-icon">speed</span> Tần Suất Giao Dịch
+                        Theo Step (TPS)</h3>
                     <div class="card-chart"><canvas id="chart-tps"></canvas></div>
                 </div>
-                <div class="card card-status">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">donut_large</span> Tỷ Lệ Trạng Thái Giao Dịch</h3>
+                <div class="card">
+                    <h3 class="card-title"><span class="material-icons-round card-icon">donut_large</span> Tỷ Lệ Trạng
+                        Thái Giao Dịch</h3>
                     <div class="card-chart"><canvas id="chart-status-donut"></canvas></div>
-                </div>
-                <div class="card card-alerts">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">warning_amber</span> Cảnh Báo Gian Lận Mới Nhất</h3>
-                    <div class="alerts-list" id="alerts-list"></div>
                 </div>
             </section>
 
             <!-- Row: Fraud + Amount + Types -->
             <section class="dashboard-row">
                 <div class="card">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">policy</span> Phân bố Gian lận <span class="badge">is_fraud</span></h3>
+                    <h3 class="card-title"><span class="material-icons-round card-icon">policy</span> Phân bố Gian lận
+                        <span class="badge">is_fraud</span>
+                    </h3>
                     <div class="card-chart"><canvas id="chart-fraud"></canvas></div>
                 </div>
                 <div class="card">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">payments</span> Giao dịch ≷ 200,000 <span class="badge">amount</span></h3>
+                    <h3 class="card-title"><span class="material-icons-round card-icon">payments</span> Giao dịch ≷
+                        200,000 <span class="badge">amount</span></h3>
                     <div class="card-chart"><canvas id="chart-amount"></canvas></div>
                 </div>
                 <div class="card">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">bar_chart</span> Loại giao dịch <span class="badge">type</span></h3>
+                    <h3 class="card-title"><span class="material-icons-round card-icon">bar_chart</span> Loại giao dịch
+                        <span class="badge">type</span>
+                    </h3>
                     <div class="card-chart"><canvas id="chart-types"></canvas></div>
                 </div>
             </section>
 
-            <!-- Row: AccTx + Anomaly + Accounts -->
-            <section class="dashboard-row">
-                <div class="card card-wide">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">account_balance</span> Merchant vs Customer <span class="badge">account × type</span></h3>
-                    <div class="card-chart"><canvas id="chart-acc-tx"></canvas></div>
+            <!-- Row: Anomaly Score -->
+            <section class="dashboard-row grid-2">
+                <div class="card">
+                    <h3 class="card-title"><span class="material-icons-round card-icon">report_problem</span> Phân bố
+                        Anomaly Score <span class="badge">score</span></h3>
+                    <div class="card-chart"><canvas id="chart-anomaly"></canvas></div>
                 </div>
                 <div class="card">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">report_problem</span> Anomaly Score <span class="badge">score</span></h3>
-                    <div class="card-chart"><canvas id="chart-anomaly"></canvas></div>
+                    <h3 class="card-title"><span class="material-icons-round card-icon">groups</span> Tỷ lệ tài khoản
+                        <span class="badge">Customer/Merchant</span>
+                    </h3>
+                    <div class="card-chart"><canvas id="chart-accounts"></canvas></div>
                 </div>
             </section>
 
-            <!-- Row: Accounts + Map -->
+            <!-- Row: Map -->
             <section class="dashboard-row">
-                <div class="card">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">groups</span> Loại tài khoản <span class="badge">Customer/Merchant</span></h3>
-                    <div class="card-chart"><canvas id="chart-accounts"></canvas></div>
-                </div>
-                <div class="card card-wide">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">map</span> Phân bố vị trí giao dịch
-                        <span class="map-legend-inline">
-                            <span class="leg-dot fraud"></span> Gian lận
-                            <span class="leg-dot normal"></span> Bình thường
+                <div class="card card-full">
+                    <h3 class="card-title"><span class="material-icons-round card-icon">map</span> Phân bố vị trí giao
+                        dịch
+                        <span class="map-legend-inline" style="gap: 8px;">
+                            <span class="leg-dot" style="background: #16a34a"></span> 0-20
+                            <span class="leg-dot" style="background: #84cc16"></span> 40
+                            <span class="leg-dot" style="background: #eab308"></span> 60
+                            <span class="leg-dot" style="background: #f97316"></span> 80
+                            <span class="leg-dot" style="background: #ef4444"></span> 100
                         </span>
                     </h3>
                     <div class="map-box" id="map-dashboard"></div>
@@ -183,12 +189,18 @@
                     <div class="filter-group">
                         <label>Giao dịch theo Loại</label>
                         <div class="radio-group">
-                            <label class="radio-item"><input type="radio" name="logType" value="" checked><span>Tất cả</span></label>
-                            <label class="radio-item"><input type="radio" name="logType" value="CASH_IN"><span>Nạp tiền</span></label>
-                            <label class="radio-item"><input type="radio" name="logType" value="CASH_OUT"><span>Rút tiền</span></label>
-                            <label class="radio-item"><input type="radio" name="logType" value="TRANSFER"><span>Chuyển khoản</span></label>
-                            <label class="radio-item"><input type="radio" name="logType" value="PAYMENT"><span>Thanh toán</span></label>
-                            <label class="radio-item"><input type="radio" name="logType" value="DEBIT"><span>Ghi nợ</span></label>
+                            <label class="radio-item"><input type="radio" name="logType" value="" checked><span>Tất
+                                    cả</span></label>
+                            <label class="radio-item"><input type="radio" name="logType" value="CASH_IN"><span>Nạp
+                                    tiền</span></label>
+                            <label class="radio-item"><input type="radio" name="logType" value="CASH_OUT"><span>Rút
+                                    tiền</span></label>
+                            <label class="radio-item"><input type="radio" name="logType" value="TRANSFER"><span>Chuyển
+                                    khoản</span></label>
+                            <label class="radio-item"><input type="radio" name="logType" value="PAYMENT"><span>Thanh
+                                    toán</span></label>
+                            <label class="radio-item"><input type="radio" name="logType" value="DEBIT"><span>Ghi
+                                    nợ</span></label>
                         </div>
                     </div>
                     <div class="filter-group">
@@ -203,24 +215,61 @@
                 </div>
                 <div class="logs-table-wrap">
                     <h2 class="page-heading">Bảng Giám Sát Giao Dịch Sống</h2>
+
+                    <!-- Bảng thống kê trạng thái -->
+                    <div class="logs-stats-row" id="logs-stats-row">
+                        <div class="stat-card stat-success">
+                            <span class="material-icons-round">check_circle</span>
+                            <div class="stat-info">
+                                <div class="stat-label">Thành công (Success)</div>
+                                <div class="stat-value" id="log-stat-success">--</div>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-fail">
+                            <span class="material-icons-round">cancel</span>
+                            <div class="stat-info">
+                                <div class="stat-label">Thất bại (Fail)</div>
+                                <div class="stat-value" id="log-stat-fail">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phân bổ điểm anomaly -->
+                    <div class="logs-score-dist" id="logs-score-dist">
+                        <h4 class="score-dist-title">Tỷ lệ phân bổ điểm Anomaly Score</h4>
+                        <div class="score-bars" id="score-bars"></div>
+                    </div>
+
                     <div class="table-container">
                         <table class="tx-table" id="tx-table">
                             <thead>
                                 <tr>
                                     <th class="sortable" data-sort="created_at">Thời gian ↕</th>
                                     <th>Mã GD</th>
-                                    <th>Tài khoản Gửi</th>
-                                    <th>Tài khoản Nhận</th>
+                                    <th>TK Gửi</th>
+                                    <th>TK Nhận</th>
                                     <th>Loại</th>
                                     <th class="sortable" data-sort="amount">Số tiền ↕</th>
-                                    <th class="sortable" data-sort="anomaly_score">Điểm Rủi Ro ↕</th>
+                                    <th>Số dư TK Gửi (Trước → Sau)</th>
+                                    <th>Số dư TK Nhận (Trước → Sau)</th>
+                                    <th class="sortable" data-sort="anomaly_score">Điểm Hợp Lệ ↕</th>
+                                    <th>Cờ Báo Gian Lận</th>
                                     <th>Trạng Thái</th>
                                 </tr>
                             </thead>
                             <tbody id="tx-table-body"></tbody>
                         </table>
                     </div>
-                    <div class="pagination" id="pagination"></div>
+                    <!-- Pagination with page jump -->
+                    <div class="pagination-wrap">
+                        <div class="pagination" id="pagination"></div>
+                        <div class="page-jump">
+                            <label>Đi đến trang:</label>
+                            <input type="number" id="page-jump-input" min="1" class="filter-input page-jump-input"
+                                placeholder="Số trang">
+                            <button class="btn-page-jump" id="btn-page-jump">Đi</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -228,19 +277,27 @@
         <!-- ============ PAGE: ANALYSIS ============ -->
         <main class="page-content" id="page-analysis">
             <h2 class="page-heading">Phân tích User</h2>
-            <section class="dashboard-row">
+            <section class="dashboard-row grid-2">
                 <div class="card">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">groups</span> Phân bố Customer vs Merchant</h3>
+                    <h3 class="card-title"><span class="material-icons-round card-icon">groups</span> Tỷ lệ tài khoản
+                        Customer vs Merchant</h3>
                     <div class="card-chart"><canvas id="chart-accounts2"></canvas></div>
                 </div>
-                <div class="card card-wide">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">account_balance</span> Giao dịch theo loại tài khoản</h3>
-                    <div class="card-chart"><canvas id="chart-acc-tx2"></canvas></div>
+                <div class="card">
+                    <h3 class="card-title"><span class="material-icons-round card-icon">upload</span> Giao dịch gửi theo
+                        loại tài khoản</h3>
+                    <div class="card-chart"><canvas id="chart-acc-send"></canvas></div>
                 </div>
             </section>
-            <section class="dashboard-row">
-                <div class="card card-full">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">trending_up</span> Tần suất giao dịch theo Step</h3>
+            <section class="dashboard-row grid-2">
+                <div class="card">
+                    <h3 class="card-title"><span class="material-icons-round card-icon">download</span> Giao dịch nhận
+                        theo loại tài khoản</h3>
+                    <div class="card-chart"><canvas id="chart-acc-receive"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title"><span class="material-icons-round card-icon">trending_up</span> Tần suất giao
+                        dịch theo Step</h3>
                     <div class="card-chart"><canvas id="chart-step2"></canvas></div>
                 </div>
             </section>
@@ -274,7 +331,7 @@
                             <option value="">Tất cả</option>
                             <option value="high">Cao (≥80)</option>
                             <option value="medium">Trung bình (40-79)</option>
-                            <option value="low">Thấp (<40)</option>
+                            <option value="low">Thấp (<40)< /option>
                         </select>
                     </div>
                 </div>
@@ -282,21 +339,18 @@
                     <h2 class="page-heading">Administr Báo cáo</h2>
                     <section class="dashboard-row grid-2">
                         <div class="card">
-                            <h3 class="card-title">Số Lượng Giao Dịch Bị Chặn Theo Step</h3>
+                            <h3 class="card-title">Giao Dịch Theo Step (Thành công / Thất bại)</h3>
                             <div class="card-chart"><canvas id="chart-blocked-step"></canvas></div>
                         </div>
                         <div class="card">
-                            <h3 class="card-title">Xu Hướng Điểm Rủi Ro Trung Bình</h3>
-                            <div class="card-chart"><canvas id="chart-risk-trend"></canvas></div>
+                            <h3 class="card-title">Phân bố mức điểm Anomaly theo loại giao dịch</h3>
+                            <div class="card-chart"><canvas id="chart-score-dist-type"></canvas></div>
                         </div>
                     </section>
-                    <section class="dashboard-row grid-2">
+                    <section class="dashboard-row">
+
                         <div class="card">
-                            <h3 class="card-title">Giao Dịch Bất Thường Theo Vị Trí Địa Lý</h3>
-                            <div class="map-box" id="map-report"></div>
-                        </div>
-                        <div class="card">
-                            <h3 class="card-title">Anomaly Score theo Loại Giao Dịch</h3>
+                            <h3 class="card-title">Số lượng Thành công / Thất bại theo loại giao dịch</h3>
                             <div class="card-chart"><canvas id="chart-risk-type"></canvas></div>
                         </div>
                     </section>
@@ -309,24 +363,56 @@
             <h2 class="page-heading">Cài đặt</h2>
             <div class="settings-grid">
                 <div class="card">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">settings</span> Cấu hình Pipeline</h3>
+                    <h3 class="card-title"><span class="material-icons-round card-icon">settings</span> Cấu hình
+                        Pipeline</h3>
                     <div class="settings-form">
-                        <div class="setting-row"><label>Database Host</label><input type="text" value="localhost" class="filter-input" readonly></div>
-                        <div class="setting-row"><label>Database Port</label><input type="text" value="5432" class="filter-input" readonly></div>
-                        <div class="setting-row"><label>Database Name</label><input type="text" value="fraud_detection" class="filter-input" readonly></div>
-                        <div class="setting-row"><label>CSV Path</label><input type="text" value="D:\data.csv" class="filter-input" readonly></div>
+                        <div class="setting-row"><label>Database Host</label><input type="text" value="localhost"
+                                class="filter-input" readonly></div>
+                        <div class="setting-row"><label>Database Port</label><input type="text" value="5432"
+                                class="filter-input" readonly></div>
+                        <div class="setting-row"><label>Database Name</label><input type="text" value="fraud_detection"
+                                class="filter-input" readonly></div>
+                        <div class="setting-row"><label>CSV Path</label><input type="text" value="D:\data.csv"
+                                class="filter-input" readonly></div>
                     </div>
                 </div>
                 <div class="card">
-                    <h3 class="card-title"><span class="material-icons-round card-icon">score</span> Bảng điểm Anomaly</h3>
+                    <h3 class="card-title"><span class="material-icons-round card-icon">score</span> Bảng điểm Anomaly
+                    </h3>
                     <table class="scoring-table">
-                        <thead><tr><th>Tiêu chí</th><th>Điểm</th><th>Điều kiện</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Tiêu chí</th>
+                                <th>Điểm</th>
+                                <th>Điều kiện</th>
+                            </tr>
+                        </thead>
                         <tbody>
-                            <tr><td>Sai lệch số dư gửi</td><td class="score-val">+20</td><td>new_balance_org ≠ old_balance_org - amount</td></tr>
-                            <tr><td>Giao dịch vượt số dư</td><td class="score-val">+20</td><td>amount > old_balance_org</td></tr>
-                            <tr><td>Rút tiền từ ví rỗng</td><td class="score-val">+20</td><td>old_balance_org = 0 AND amount > 0</td></tr>
-                            <tr><td>Số dư nhận bằng 0</td><td class="score-val">+20</td><td>amount > 0 AND new_balance_dest = 0 (trừ M)</td></tr>
-                            <tr><td>Số dư nhận khác</td><td class="score-val">+20</td><td>new_balance_dest ≠ old_balance_dest + amount (trừ M)</td></tr>
+                            <tr>
+                                <td>Sai lệch số dư gửi</td>
+                                <td class="score-val">+20</td>
+                                <td>new_balance_org ≠ old_balance_org - amount</td>
+                            </tr>
+                            <tr>
+                                <td>Giao dịch vượt số dư</td>
+                                <td class="score-val">+20</td>
+                                <td>amount > old_balance_org</td>
+                            </tr>
+                            <tr>
+                                <td>Rút tiền từ ví rỗng</td>
+                                <td class="score-val">+20</td>
+                                <td>old_balance_org = 0 AND amount > 0</td>
+                            </tr>
+                            <tr>
+                                <td>Số dư nhận bằng 0</td>
+                                <td class="score-val">+20</td>
+                                <td>amount > 0 AND new_balance_dest = 0 (trừ M)</td>
+                            </tr>
+                            <tr>
+                                <td>Số dư nhận khác</td>
+                                <td class="score-val">+20</td>
+                                <td>new_balance_dest ≠ old_balance_dest + amount (trừ M)</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -336,4 +422,5 @@
 
     <script src="/static/js/dashboard.js"></script>
 </body>
+
 </html>

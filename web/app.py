@@ -132,11 +132,11 @@ def api_anomaly_distribution():
         SELECT 
             CASE 
                 WHEN anomaly_score = 0 THEN '0'
-                WHEN anomaly_score <= 20 THEN '1-20'
-                WHEN anomaly_score <= 40 THEN '21-40'
-                WHEN anomaly_score <= 60 THEN '41-60'
-                WHEN anomaly_score <= 80 THEN '61-80'
-                WHEN anomaly_score <= 100 THEN '81-100'
+                WHEN anomaly_score <= 20 THEN '20'
+                WHEN anomaly_score <= 40 THEN '40'
+                WHEN anomaly_score <= 60 THEN '60'
+                WHEN anomaly_score <= 80 THEN '80'
+                WHEN anomaly_score <= 100 THEN '100'
             END as score_range,
             COUNT(*) as count
         FROM transactions 
@@ -156,8 +156,7 @@ def api_status_distribution():
         SELECT 
             CASE 
                 WHEN status = 'success' THEN 'Thành công'
-                WHEN status = 'fail' AND anomaly_score >= 60 THEN 'Bị chặn'
-                ELSE 'Nghi vấn'
+                ELSE 'Thất bại'
             END as label,
             COUNT(*) 
         FROM transactions GROUP BY 1
@@ -195,15 +194,15 @@ def api_map_data():
     conn = get_db()
     cur = conn.cursor()
     cur.execute("""
-        SELECT td.latitude, td.longitude, td.location_name, 
+        SELECT td.log_id, td.latitude, td.longitude, td.location_name, 
                t.transaction_type, t.amount, t.is_fraud, t.anomaly_score
         FROM transaction_details td
         JOIN transactions t ON td.transaction_id = t.transaction_id
         ORDER BY RANDOM() LIMIT 25000
     """)
     data = [{
-        "lat": row[0], "lng": row[1], "location": row[2],
-        "type": row[3], "amount": row[4], "is_fraud": row[5], "anomaly_score": row[6]
+        "log_id": row[0], "lat": row[1], "lng": row[2], "location": row[3],
+        "type": row[4], "amount": row[5], "is_fraud": row[6], "anomaly_score": row[7]
     } for row in cur.fetchall()]
     cur.close()
     conn.close()
@@ -251,12 +250,15 @@ def api_transactions_table():
     cur.execute(f"SELECT COUNT(*) FROM transactions t {where_sql}", params)
     total = cur.fetchone()[0]
     
-    # Lấy dữ liệu trang hiện tại
+    # Lấy dữ liệu trang hiện tại - bao gồm số dư trước/sau
     offset = (page - 1) * per_page
     cur.execute(f"""
         SELECT t.transaction_id, t.created_at, t.transaction_type, 
                t.from_account_id, t.to_account_id, t.amount, 
-               t.anomaly_score, t.status, t.is_fraud, t.step
+               t.anomaly_score, t.status, t.is_fraud, t.step,
+               t.old_balance_org, t.new_balance_org,
+               t.old_balance_dest, t.new_balance_dest,
+               t.is_flagged_fraud
         FROM transactions t
         {where_sql}
         ORDER BY t.{sort_by} {sort_dir}
@@ -273,7 +275,12 @@ def api_transactions_table():
         "anomaly_score": r[6],
         "status": r[7],
         "is_fraud": r[8],
-        "step": r[9]
+        "step": r[9],
+        "old_balance_org": r[10],
+        "new_balance_org": r[11],
+        "old_balance_dest": r[12],
+        "new_balance_dest": r[13],
+        "is_flagged_fraud": r[14]
     } for r in cur.fetchall()]
     
     cur.close()
@@ -288,32 +295,65 @@ def api_transactions_table():
     })
 
 
-# ============ Recent Fraud Alerts ============
+# ============ Thống kê trạng thái cho trang Logs ============
 
-@app.route('/api/recent_alerts')
-def api_recent_alerts():
+@app.route('/api/logs_stats')
+def api_logs_stats():
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("""
-        SELECT t.transaction_id, t.created_at, t.amount, t.anomaly_score,
-               t.from_account_id, t.transaction_type
-        FROM transactions t
-        WHERE t.anomaly_score >= 60
-        ORDER BY t.anomaly_score DESC, t.transaction_id DESC
-        LIMIT 20
-    """)
-    data = [{
-        "id": r[0],
-        "created_at": r[1].strftime("%d/%m/%Y %H:%M:%S") if r[1] else "",
-        "amount": r[5] if len(r) > 5 else r[2],
-        "anomaly_score": r[3],
-        "from_account": r[4],
-        "type": r[5] if len(r) > 5 else "",
-        "level": "High" if r[3] >= 80 else "Medium"
-    } for r in cur.fetchall()]
+    
+    tx_type = request.args.get('type', '')
+    min_amount = request.args.get('min_amount', '')
+    max_amount = request.args.get('max_amount', '')
+    
+    where_clauses = []
+    params = []
+    
+    if tx_type:
+        where_clauses.append("transaction_type = %s")
+        params.append(tx_type)
+    if min_amount:
+        where_clauses.append("amount >= %s")
+        params.append(float(min_amount))
+    if max_amount:
+        where_clauses.append("amount <= %s")
+        params.append(float(max_amount))
+    
+    where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+    
+    # Thống kê trạng thái success/fail
+    cur.execute(f"""
+        SELECT status, COUNT(*) 
+        FROM transactions {where_sql}
+        GROUP BY status
+    """, params)
+    status_stats = {row[0]: row[1] for row in cur.fetchall()}
+    
+    # Phân bổ theo khoảng anomaly_score
+    cur.execute(f"""
+        SELECT 
+            CASE 
+                WHEN anomaly_score = 0 THEN '0'
+                WHEN anomaly_score <= 20 THEN '20'
+                WHEN anomaly_score <= 40 THEN '40'
+                WHEN anomaly_score <= 60 THEN '60'
+                WHEN anomaly_score <= 80 THEN '80'
+                WHEN anomaly_score <= 100 THEN '100'
+            END as score_range,
+            COUNT(*) as count
+        FROM transactions {where_sql}
+        GROUP BY 1 ORDER BY MIN(anomaly_score)
+    """, params)
+    score_dist = [{"label": row[0], "count": row[1]} for row in cur.fetchall()]
+    
     cur.close()
     conn.close()
-    return jsonify(data)
+    
+    return jsonify({
+        "success_count": status_stats.get("success", 0),
+        "fail_count": status_stats.get("fail", 0),
+        "score_distribution": score_dist
+    })
 
 
 # ============ Báo cáo - Reports ============
@@ -354,15 +394,14 @@ def api_blocked_by_step():
     join_sql, where_sql, params = get_report_filters()
     cur.execute(f"""
         SELECT t.step, 
-               COUNT(*) FILTER (WHERE t.anomaly_score >= 60) as blocked,
-               COUNT(*) FILTER (WHERE t.anomaly_score < 60 AND t.anomaly_score > 0) as suspicious,
-               COUNT(*) FILTER (WHERE t.anomaly_score = 0) as clean
+               COUNT(*) FILTER (WHERE t.status = 'success') as success_count,
+               COUNT(*) FILTER (WHERE t.status = 'fail') as fail_count
         FROM transactions t
         {join_sql}
         {where_sql}
         GROUP BY t.step ORDER BY t.step
     """, params)
-    data = [{"step": r[0], "blocked": r[1], "suspicious": r[2], "clean": r[3]} for r in cur.fetchall()]
+    data = [{"step": r[0], "success": r[1], "fail": r[2]} for r in cur.fetchall()]
     cur.close()
     conn.close()
     return jsonify(data)
@@ -386,6 +425,68 @@ def api_risk_by_type():
     data = [{
         "type": r[0], "avg_score": float(r[1]), 
         "fraud_count": r[2], "total": r[3]
+    } for r in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return jsonify(data)
+
+
+@app.route('/api/score_distribution_by_type')
+def api_score_distribution_by_type():
+    """Phân bố mức điểm anomaly theo loại giao dịch"""
+    conn = get_db()
+    cur = conn.cursor()
+    join_sql, where_sql, params = get_report_filters()
+    cur.execute(f"""
+        SELECT t.transaction_type,
+               COUNT(*) FILTER (WHERE t.anomaly_score = 0) as score_0,
+               COUNT(*) FILTER (WHERE t.anomaly_score > 0 AND t.anomaly_score <= 20) as score_20,
+               COUNT(*) FILTER (WHERE t.anomaly_score > 20 AND t.anomaly_score <= 40) as score_40,
+               COUNT(*) FILTER (WHERE t.anomaly_score > 40 AND t.anomaly_score <= 60) as score_60,
+               COUNT(*) FILTER (WHERE t.anomaly_score > 60 AND t.anomaly_score <= 80) as score_80,
+               COUNT(*) FILTER (WHERE t.anomaly_score > 80 AND t.anomaly_score <= 100) as score_100
+        FROM transactions t
+        {join_sql}
+        {where_sql}
+        GROUP BY t.transaction_type
+        ORDER BY t.transaction_type
+    """, params)
+    data = [{
+        "type": r[0],
+        "score_0": r[1],
+        "score_20": r[2],
+        "score_40": r[3],
+        "score_60": r[4],
+        "score_80": r[5],
+        "score_100": r[6]
+    } for r in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return jsonify(data)
+
+
+@app.route('/api/anomaly_score_by_type')
+def api_anomaly_score_by_type():
+    """Số lượng giao dịch theo anomaly score cho mỗi loại giao dịch"""
+    conn = get_db()
+    cur = conn.cursor()
+    join_sql, where_sql, params = get_report_filters()
+    cur.execute(f"""
+        SELECT t.transaction_type,
+               COUNT(*) FILTER (WHERE t.status = 'success') as success_count,
+               COUNT(*) FILTER (WHERE t.status = 'fail') as fail_count,
+               COUNT(*) as total
+        FROM transactions t
+        {join_sql}
+        {where_sql}
+        GROUP BY t.transaction_type
+        ORDER BY t.transaction_type
+    """, params)
+    data = [{
+        "type": r[0],
+        "success_count": r[1],
+        "fail_count": r[2],
+        "total": r[3]
     } for r in cur.fetchall()]
     cur.close()
     conn.close()
@@ -416,6 +517,52 @@ def api_geo_heatmap():
     cur.close()
     conn.close()
     return jsonify(data)
+
+
+# ============ Phân tích User - Giao dịch gửi/nhận tách riêng ============
+
+@app.route('/api/account_type_send_receive')
+def api_account_type_send_receive():
+    """Giao dịch gửi và nhận theo loại tài khoản"""
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Giao dịch GỬI (from_account)
+    cur.execute("""
+        SELECT t.transaction_type, a.account_type, COUNT(*) as count
+        FROM transactions t
+        JOIN accounts a ON t.from_account_id = a.account_id
+        GROUP BY t.transaction_type, a.account_type
+        ORDER BY t.transaction_type, a.account_type
+    """)
+    send_data = {}
+    for row in cur.fetchall():
+        tx_type, acc_type, count = row
+        if tx_type not in send_data:
+            send_data[tx_type] = {"Customer": 0, "Merchant": 0}
+        send_data[tx_type][acc_type] = count
+    
+    # Giao dịch NHẬN (to_account)
+    cur.execute("""
+        SELECT t.transaction_type, a.account_type, COUNT(*) as count
+        FROM transactions t
+        JOIN accounts a ON t.to_account_id = a.account_id
+        GROUP BY t.transaction_type, a.account_type
+        ORDER BY t.transaction_type, a.account_type
+    """)
+    receive_data = {}
+    for row in cur.fetchall():
+        tx_type, acc_type, count = row
+        if tx_type not in receive_data:
+            receive_data[tx_type] = {"Customer": 0, "Merchant": 0}
+        receive_data[tx_type][acc_type] = count
+    
+    cur.close()
+    conn.close()
+    return jsonify({
+        "send": send_data,
+        "receive": receive_data
+    })
 
 
 if __name__ == '__main__':
